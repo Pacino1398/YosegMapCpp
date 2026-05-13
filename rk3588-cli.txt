@@ -1,11 +1,15 @@
-话题（最终目标）
-  - `/octomap/occupancy` (`nav_msgs/msg/OccupancyGrid`)
-  - `/octomap/points` (`sensor_msgs/msg/PointCloud2`)
+# RK3588 CLI (RKNN + ROS2)
 
-固定模型
-  - `./weights/0414_qy++.rknn`
+# 0) 进入工程根目录
+cd "$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 
-终端1（发布端，RKNN + ROS2）
+# 1) 编译
+source /opt/ros/humble/setup.bash
+rm -rf build_ninja
+cmake -S . -B build_ninja -G Ninja -DCMAKE_BUILD_TYPE=Release -DYOSEG_WITH_ROS2=ON
+cmake --build build_ninja -j$(nproc)
+
+# 2) 终端1：发布（固定 RKNN）
 source /opt/ros/humble/setup.bash
 ./build_ninja/apps/realtime_runner/realtime_runner \
   --source 0 \
@@ -23,7 +27,7 @@ source /opt/ros/humble/setup.bash
   --ros-cell-size 1.0 \
   --profile-out ./profile_ros_rknn.csv
 
-终端2（订阅检查）
+# 3) 终端2：话题检查
 source /opt/ros/humble/setup.bash
 ros2 topic list | grep octomap
 ros2 topic echo /octomap/occupancy --once
@@ -31,6 +35,6 @@ ros2 topic echo /octomap/points --once
 ros2 topic hz /octomap/occupancy
 ros2 topic hz /octomap/points
 
-终端3（RViz2）
+# 4) 终端3：RViz2（可选）
 source /opt/ros/humble/setup.bash
 rviz2
