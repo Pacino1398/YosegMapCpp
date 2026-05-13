@@ -1,107 +1,56 @@
-RK3588 / YosegMapCpp 运行流程（定制版，命令版）
+RK3588 / YosegMapCpp 最终目标运行流程（仅 RKNN + ROS2 真发布）
 
-================ 用户定制区（先改这里） ================
+================ 固定参数（按项目约定） ================
 
-export PRJ=/home/orangepi/YosegMapCpp
-export BIN=$PRJ/build_ninja/apps/realtime_runner/realtime_runner
-export MODEL=$PRJ/weights/0414_qy++.rknn
+export MODEL=./weights/0414_qy++.rknn
 export ROS_SETUP=/opt/ros/humble/setup.bash
-export SRC_CAM=0
-export SRC_RTSP='rtsp://xxx'
-export NET_W=640
-export NET_H=640
-export FRAMES=200
-export WARMUP=8
-export QCAP=4
 
 ========================================================
 
-================ 0) 前置检查 ================
+================ 0) 前置检查（必须） ================
 
-# 进入工程目录
-cd $PRJ
+cd "$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 
-# 编译工具检查
 cmake --version
 ninja --version
 c++ --version
 
-# 可执行文件是否存在
-ls -lh $BIN
-
-================================================
-
-================ 1) 编译（无 ROS2） ================
-
-cmake -S . -B build_ninja -G Ninja -DCMAKE_BUILD_TYPE=Release -DYOSEG_WITH_ROS2=OFF
-cmake --build build_ninja -j
-
-====================================================
-
-================ 2) 先跑通 CPU 链路（必须先过） ================
-
-${BIN} \
-  --source ${SRC_CAM} \
-  --backend cpu \
-  --model noop \
-  --frames ${FRAMES} \
-  --warmup-frames ${WARMUP} \
-  --queue-capacity ${QCAP} \
-  --net-w ${NET_W} \
-  --net-h ${NET_H} \
-  --profile-out ${PRJ}/profile_cpu.csv
-
-# 预期：程序输出 CSV 行并正常退出（exit code 0）
-
-===============================================================
-
-================ 3) 再跑 RKNN（模型必须存在） ================
-
-# 先确认模型文件存在（不存在就不要启动）
 ls -lh ${MODEL}
 
-${BIN} \
-  --source ${SRC_CAM} \
-  --backend rknn \
-  --model ${MODEL} \
-  --frames ${FRAMES} \
-  --warmup-frames ${WARMUP} \
-  --queue-capacity ${QCAP} \
-  --net-w ${NET_W} \
-  --net-h ${NET_H} \
-  --profile-out ${PRJ}/profile_rknn.csv
+=====================================================
 
-# 若模型路径错误，会报 failed to init infer engine（预期保护）
+================ 1) 编译（必须开启 ROS2） ================
 
-==============================================================
-
-================ 4) ROS2 真发布（可选） ================
-
-# 仅当板端已安装 ROS2 且能 source 成功时执行
 source ${ROS_SETUP}
-
+rm -rf build_ninja
 cmake -S . -B build_ninja -G Ninja -DCMAKE_BUILD_TYPE=Release -DYOSEG_WITH_ROS2=ON
 cmake --build build_ninja -j
 
-终端1（发布端）
+=========================================================
+
+================ 2) 发布端（RKNN + ROS2） ================
+
 source ${ROS_SETUP}
-${BIN} \
-  --source ${SRC_CAM} \
+./build_ninja/apps/realtime_runner/realtime_runner \
+  --source 0 \
   --backend rknn \
   --model ${MODEL} \
   --frames 1000 \
-  --warmup-frames ${WARMUP} \
-  --queue-capacity ${QCAP} \
-  --net-w ${NET_W} \
-  --net-h ${NET_H} \
+  --warmup-frames 8 \
+  --queue-capacity 4 \
+  --net-w 640 \
+  --net-h 640 \
   --ros-enable \
   --ros-rate 5 \
   --ros-occ-topic /octomap/occupancy \
   --ros-cloud-topic /octomap/points \
   --ros-cell-size 1.0 \
-  --profile-out ${PRJ}/profile_ros.csv
+  --profile-out ./profile_ros_rknn.csv
 
-终端2（话题检查）
+=========================================================
+
+================ 3) 订阅端检查 ================
+
 source ${ROS_SETUP}
 ros2 topic list | grep octomap
 ros2 topic echo /octomap/occupancy --once
@@ -109,25 +58,11 @@ ros2 topic echo /octomap/points --once
 ros2 topic hz /octomap/occupancy
 ros2 topic hz /octomap/points
 
-终端3（RViz2）
+================================================
+
+================ 4) RViz2（可选） ================
+
 source ${ROS_SETUP}
 rviz2
 
-=======================================================
-
-================ 5) 常见失败与快速处理 ================
-
-1) 报 `failed to init infer engine`
-   - 检查 `--model` 路径
-   - 先用 `--backend cpu --model noop` 跑通
-
-2) 没有 ROS2 话题
-   - 确认 `-DYOSEG_WITH_ROS2=ON` 重新编译过
-   - 确认 `source /opt/ros/humble/setup.bash` 成功
-   - 确认运行参数包含 `--ros-enable`
-
-3) 摄像头打不开
-   - 换 `--source ./demo.mp4` 先验证链路
-   - 确认设备节点权限
-
-=======================================================
+=================================================

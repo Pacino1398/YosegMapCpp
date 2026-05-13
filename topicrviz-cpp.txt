@@ -1,25 +1,11 @@
-话题（目标）
+话题（最终目标）
   - `/octomap/occupancy` (`nav_msgs/msg/OccupancyGrid`)
   - `/octomap/points` (`sensor_msgs/msg/PointCloud2`)
 
-================ 前置确认（必须） ================
+固定模型
+  - `./weights/0414_qy++.rknn`
 
-1) ROS2 环境可用
-source /opt/ros/humble/setup.bash
-ros2 --help >/dev/null
-
-2) 工程按 ROS2 打开编译
-cmake -S . -B build_ninja -G Ninja -DCMAKE_BUILD_TYPE=Release -DYOSEG_WITH_ROS2=ON
-cmake --build build_ninja -j
-
-3) 模型存在（RKNN 场景）
-ls -lh ./weights/0414_qy++.rknn
-
-==================================================
-
-场景A：RKNN + ROS2发布 + 订阅检查
-
-终端1（发布端）
+终端1（发布端，RKNN + ROS2）
 source /opt/ros/humble/setup.bash
 ./build_ninja/apps/realtime_runner/realtime_runner \
   --source 0 \
@@ -48,37 +34,3 @@ ros2 topic hz /octomap/points
 终端3（RViz2）
 source /opt/ros/humble/setup.bash
 rviz2
-
-场景B：CPU + ROS2发布（排障用）
-
-终端1（发布端）
-source /opt/ros/humble/setup.bash
-./build_ninja/apps/realtime_runner/realtime_runner \
-  --source 0 \
-  --backend cpu \
-  --model noop \
-  --frames 1000 \
-  --warmup-frames 8 \
-  --queue-capacity 4 \
-  --net-w 640 \
-  --net-h 640 \
-  --ros-enable \
-  --ros-rate 5 \
-  --ros-occ-topic /octomap/occupancy \
-  --ros-cloud-topic /octomap/points \
-  --ros-cell-size 1.0 \
-  --profile-out ./profile_ros_cpu.csv
-
-终端2（订阅检查）
-source /opt/ros/humble/setup.bash
-ros2 topic list | grep octomap
-ros2 topic hz /octomap/occupancy
-ros2 topic hz /octomap/points
-
-终端3（RViz2）
-source /opt/ros/humble/setup.bash
-rviz2
-
-说明
-- 若未按 `-DYOSEG_WITH_ROS2=ON` 编译，程序会回退 stub，不会出现真实 ROS2 话题。
-- 若 `--backend rknn` 模型路径错误，会报 `failed to init infer engine`，请先改用 CPU 场景排障。
