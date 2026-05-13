@@ -1,0 +1,2 @@
+add_executable(bench_pipeline_stub pipeline_stub.cpp)
+target_link_libraries(bench_pipeline_stub PRIVATE yoseg_core)

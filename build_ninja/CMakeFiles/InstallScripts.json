@@ -1,0 +1,14 @@
+{
+	"InstallScripts" : 
+	[
+		"D:/qingyu/YosegMapCpp/build_ninja/cmake_install.cmake",
+		"D:/qingyu/YosegMapCpp/build_ninja/modules/core/cmake_install.cmake",
+		"D:/qingyu/YosegMapCpp/build_ninja/modules/capture/cmake_install.cmake",
+		"D:/qingyu/YosegMapCpp/build_ninja/modules/infer/cmake_install.cmake",
+		"D:/qingyu/YosegMapCpp/build_ninja/modules/planner/cmake_install.cmake",
+		"D:/qingyu/YosegMapCpp/build_ninja/modules/ros_bridge/cmake_install.cmake",
+		"D:/qingyu/YosegMapCpp/build_ninja/apps/realtime_runner/cmake_install.cmake",
+		"D:/qingyu/YosegMapCpp/build_ninja/benchmarks/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

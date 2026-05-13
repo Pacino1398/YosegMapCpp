@@ -1,0 +1,69 @@
+话题（统一订阅）
+  - `/octomap/occupancy` (`nav_msgs/msg/OccupancyGrid`)
+  - `/octomap/points` (`sensor_msgs/msg/PointCloud2`)
+
+场景A：实时运行 + ROS2发布 + 本机订阅检查
+
+终端1（发布端）
+source /opt/ros/humble/setup.bash
+./build_ninja/apps/realtime_runner/realtime_runner \
+  --source 0 \
+  --backend rknn \
+  --model ./weights/model.rknn \
+  --frames 1000 \
+  --warmup-frames 8 \
+  --queue-capacity 4 \
+  --net-w 640 \
+  --net-h 640 \
+  --ros-enable \
+  --ros-rate 5 \
+  --ros-occ-topic /octomap/occupancy \
+  --ros-cloud-topic /octomap/points \
+  --ros-cell-size 1.0 \
+  --profile-out ./profile_ros.csv
+
+终端2（订阅检查）
+source /opt/ros/humble/setup.bash
+ros2 topic list | grep octomap
+ros2 topic echo /octomap/occupancy --once
+ros2 topic echo /octomap/points --once
+ros2 topic hz /octomap/occupancy
+ros2 topic hz /octomap/points
+
+终端3（RViz2）
+source /opt/ros/humble/setup.bash
+rviz2
+
+场景B：CPU链路验证（仍发布ROS2）
+
+终端1（发布端）
+source /opt/ros/humble/setup.bash
+./build_ninja/apps/realtime_runner/realtime_runner \
+  --source 0 \
+  --backend cpu \
+  --model noop \
+  --frames 1000 \
+  --warmup-frames 8 \
+  --queue-capacity 4 \
+  --net-w 640 \
+  --net-h 640 \
+  --ros-enable \
+  --ros-rate 5 \
+  --ros-occ-topic /octomap/occupancy \
+  --ros-cloud-topic /octomap/points \
+  --ros-cell-size 1.0 \
+  --profile-out ./profile_ros_cpu.csv
+
+终端2（订阅检查）
+source /opt/ros/humble/setup.bash
+ros2 topic list | grep octomap
+ros2 topic hz /octomap/occupancy
+ros2 topic hz /octomap/points
+
+终端3（RViz2）
+source /opt/ros/humble/setup.bash
+rviz2
+
+说明
+- 若未启用 `-DYOSEG_WITH_ROS2=ON` 或系统缺少 ROS2 依赖，程序会回退 stub，不会出现真实 ROS2 话题。
+- 若 `--backend rknn` 但模型文件不存在，会报 `failed to init infer engine`，请先确认 `--model` 路径。
