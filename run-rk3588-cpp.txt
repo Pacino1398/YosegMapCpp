@@ -22,7 +22,7 @@ cmake --build build_ninja -j
 ./build_ninja/apps/realtime_runner/realtime_runner \
   --source 0 \
   --backend rknn \
-  --model ./weights/model.rknn \
+  --model ./weights/0414_qy++.rknn \
   --frames 200 \
   --warmup-frames 8 \
   --queue-capacity 4 \
@@ -55,7 +55,7 @@ cmake --build build_ninja -j
 ./build_ninja/apps/realtime_runner/realtime_runner \
   --source rtsp://xxx \
   --backend rknn \
-  --model ./weights/model.rknn \
+  --model ./weights/0414_qy++.rknn \
   --frames 1000 \
   --warmup-frames 8 \
   --queue-capacity 4 \
@@ -82,7 +82,7 @@ source /opt/ros/humble/setup.bash
 ./build_ninja/apps/realtime_runner/realtime_runner \
   --source 0 \
   --backend rknn \
-  --model ./weights/model.rknn \
+  --model ./weights/0414_qy++.rknn \
   --frames 1000 \
   --warmup-frames 8 \
   --queue-capacity 4 \
@@ -113,7 +113,7 @@ sudo watch -n1 'echo "=== RKNPU Status ==="; for k in load freq fps; do p=/sys/k
 [E] 常用参数速查
 - --source 0 | rtsp://xxx | ./demo.mp4
 - --backend cpu|rknn
-- --model ./weights/model.rknn
+- --model ./weights/0414_qy++.rknn \
 - --frames 1000
 - --warmup-frames 8
 - --queue-capacity 4

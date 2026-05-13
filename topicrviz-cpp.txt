@@ -9,7 +9,7 @@ source /opt/ros/humble/setup.bash
 ./build_ninja/apps/realtime_runner/realtime_runner \
   --source 0 \
   --backend rknn \
-  --model ./weights/model.rknn \
+  --model ./weights/0414_qy++.rknn \
   --frames 1000 \
   --warmup-frames 8 \
   --queue-capacity 4 \
