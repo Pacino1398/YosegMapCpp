@@ -1,8 +1,23 @@
-话题（统一订阅）
+话题（目标）
   - `/octomap/occupancy` (`nav_msgs/msg/OccupancyGrid`)
   - `/octomap/points` (`sensor_msgs/msg/PointCloud2`)
 
-场景A：实时运行 + ROS2发布 + 本机订阅检查
+================ 前置确认（必须） ================
+
+1) ROS2 环境可用
+source /opt/ros/humble/setup.bash
+ros2 --help >/dev/null
+
+2) 工程按 ROS2 打开编译
+cmake -S . -B build_ninja -G Ninja -DCMAKE_BUILD_TYPE=Release -DYOSEG_WITH_ROS2=ON
+cmake --build build_ninja -j
+
+3) 模型存在（RKNN 场景）
+ls -lh ./weights/0414_qy++.rknn
+
+==================================================
+
+场景A：RKNN + ROS2发布 + 订阅检查
 
 终端1（发布端）
 source /opt/ros/humble/setup.bash
@@ -20,7 +35,7 @@ source /opt/ros/humble/setup.bash
   --ros-occ-topic /octomap/occupancy \
   --ros-cloud-topic /octomap/points \
   --ros-cell-size 1.0 \
-  --profile-out ./profile_ros.csv
+  --profile-out ./profile_ros_rknn.csv
 
 终端2（订阅检查）
 source /opt/ros/humble/setup.bash
@@ -34,7 +49,7 @@ ros2 topic hz /octomap/points
 source /opt/ros/humble/setup.bash
 rviz2
 
-场景B：CPU链路验证（仍发布ROS2）
+场景B：CPU + ROS2发布（排障用）
 
 终端1（发布端）
 source /opt/ros/humble/setup.bash
@@ -65,5 +80,5 @@ source /opt/ros/humble/setup.bash
 rviz2
 
 说明
-- 若未启用 `-DYOSEG_WITH_ROS2=ON` 或系统缺少 ROS2 依赖，程序会回退 stub，不会出现真实 ROS2 话题。
-- 若 `--backend rknn` 但模型文件不存在，会报 `failed to init infer engine`，请先确认 `--model` 路径。
+- 若未按 `-DYOSEG_WITH_ROS2=ON` 编译，程序会回退 stub，不会出现真实 ROS2 话题。
+- 若 `--backend rknn` 模型路径错误，会报 `failed to init infer engine`，请先改用 CPU 场景排障。
