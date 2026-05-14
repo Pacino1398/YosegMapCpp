@@ -1,4 +1,4 @@
-#include "yoseg/ros_bridge/ros_bridge.hpp"
+﻿#include "yoseg/ros_bridge/ros_bridge.hpp"
 
 #include <chrono>
 #include <cstdint>
@@ -60,7 +60,8 @@ void init_ros_bridge(const PublishConfig& cfg) {
         g_occ_pub = g_node->create_publisher<nav_msgs::msg::OccupancyGrid>(g_cfg.occ_topic, 10);
         g_cloud_pub = g_node->create_publisher<sensor_msgs::msg::PointCloud2>(g_cfg.cloud_topic, 10);
         std::cout << "ros bridge initialized (ros2), occ=" << g_cfg.occ_topic << ", cloud=" << g_cfg.cloud_topic
-                  << ", frame_id=" << g_cfg.frame_id << ", rate_hz=" << g_cfg.rate_hz << "\n";
+                  << ", frame_id=" << g_cfg.frame_id << ", rate_hz=" << g_cfg.rate_hz
+                  << ", grid_units=dimensionless, occ_resolution=1.0(nominal)\n";
         return;
     }
 #endif
@@ -97,7 +98,7 @@ bool publish(const yoseg::planner::PlannerOutput& planner_output) {
         nav_msgs::msg::OccupancyGrid occ{};
         occ.header.stamp = stamp;
         occ.header.frame_id = g_cfg.frame_id;
-        occ.info.resolution = g_cfg.cell_size;
+        occ.info.resolution = 1.0f;  // nominal placeholder: dimensionless grid units
         occ.info.width = static_cast<std::uint32_t>(w);
         occ.info.height = static_cast<std::uint32_t>(h);
         occ.info.origin.orientation.w = 1.0;
@@ -133,8 +134,8 @@ bool publish(const yoseg::planner::PlannerOutput& planner_output) {
         cloud.fields[2].count = 1;
         cloud.data.resize(static_cast<std::size_t>(cloud.row_step), 0);
         for (std::size_t i = 0; i < planner_output.path.size(); ++i) {
-            const float x = static_cast<float>(planner_output.path[i].x) * g_cfg.cell_size;
-            const float y = static_cast<float>(planner_output.path[i].y) * g_cfg.cell_size;
+            const float x = static_cast<float>(planner_output.path[i].x);  // grid units
+            const float y = static_cast<float>(planner_output.path[i].y);  // grid units
             const float z = 0.0f;
             std::memcpy(cloud.data.data() + i * 12 + 0, &x, sizeof(float));
             std::memcpy(cloud.data.data() + i * 12 + 4, &y, sizeof(float));
@@ -171,3 +172,4 @@ void shutdown_ros_bridge() {
 }
 
 } // namespace yoseg::ros_bridge
+

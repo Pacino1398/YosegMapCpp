@@ -62,7 +62,7 @@ ROS 相关参数（realtime_runner）：
 - `--ros-rate <hz>`
 - `--ros-occ-topic <topic>`
 - `--ros-cloud-topic <topic>`
-- `--ros-cell-size <meters>`
+- `--ros-cell-size <meters>`（兼容参数，当前无量纲网格模式下忽略）
 
 RKNN 路径（需要有效 `.rknn` 模型）：
 
@@ -71,6 +71,14 @@ RKNN 路径（需要有效 `.rknn` 模型）：
 ```
 
 若 `--backend rknn` 但模型不存在，程序会报 `failed to init infer engine`，这是预期保护行为。
+
+## 无量纲网格约定（当前默认）
+
+- 当前采用无量纲网格建图：`640x640` 像素直接映射为导航网格索引。
+- 工程命名语义统一为 `grid units`，内部 `x/y` 表示网格索引，不代表真实米制。
+- ROS2 `OccupancyGrid.info.resolution` 固定发布 `1.0` 作为名义占位值（非物理尺度）。
+- ROS2 `PointCloud2` 当前发布的是 `grid units` 坐标（非米制坐标）。
+- 后续接入真实标定（如 15 米等不同高度）时，仅需增加线性比例转换模块，不影响现有规划与发布主流程。
 
 ## ROS2 启用（Phase 3）
 

@@ -1,4 +1,5 @@
 # RK3588 CLI (RKNN + ROS2)
+# 当前约定：无量纲网格（grid units），OccupancyGrid resolution 固定名义值 1.0（非物理米制）
 
 # 0) 进入工程根目录
 cd "$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
@@ -24,8 +25,9 @@ source /opt/ros/humble/setup.bash
   --ros-rate 5 \
   --ros-occ-topic /octomap/occupancy \
   --ros-cloud-topic /octomap/points \
-  --ros-cell-size 1.0 \
   --profile-out ./profile_ros_rknn.csv
+
+# 说明：--ros-cell-size 为兼容参数，当前模式下会被忽略
 
 # 3) 终端2：话题检查
 source /opt/ros/humble/setup.bash

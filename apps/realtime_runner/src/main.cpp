@@ -1,4 +1,4 @@
-#include "yoseg/capture/capture.hpp"
+﻿#include "yoseg/capture/capture.hpp"
 #include "yoseg/core/bounded_queue.hpp"
 #include "yoseg/core/perf_counters.hpp"
 #include "yoseg/infer/infer.hpp"
@@ -36,6 +36,7 @@ struct RuntimeConfig {
     std::string ros_occ_topic = "/octomap/occupancy";
     std::string ros_cloud_topic = "/octomap/points";
     float ros_cell_size = 1.0f;
+    bool ros_cell_size_overridden = false;
     std::string profile_out;
     float obstacle_thres = 0.5f;
     int planner_max_iters = 20000;
@@ -75,6 +76,7 @@ RuntimeConfig parse_args(int argc, char** argv) {
             cfg.ros_cloud_topic = argv[++i];
         } else if (std::strcmp(argv[i], "--ros-cell-size") == 0 && i + 1 < argc) {
             cfg.ros_cell_size = std::max(0.001f, static_cast<float>(std::atof(argv[++i])));
+            cfg.ros_cell_size_overridden = true;
         } else if (std::strcmp(argv[i], "--profile-out") == 0 && i + 1 < argc) {
             cfg.profile_out = argv[++i];
         } else if (std::strcmp(argv[i], "--obstacle-thres") == 0 && i + 1 < argc) {
@@ -121,7 +123,7 @@ int main(int argc, char** argv) {
     ros_cfg.frame_id = "map";
     ros_cfg.occ_topic = cfg.ros_occ_topic;
     ros_cfg.cloud_topic = cfg.ros_cloud_topic;
-    ros_cfg.cell_size = cfg.ros_cell_size;
+    ros_cfg.cell_size = 1.0f;  // fixed nominal placeholder for dimensionless grid mapping
     yoseg::ros_bridge::set_perf_counters(&perf);
     yoseg::ros_bridge::init_ros_bridge(ros_cfg);
 
@@ -139,6 +141,10 @@ int main(int argc, char** argv) {
 
     std::cout << "realtime runner started\n";
     std::cout << "source=" << cfg.source << ", backend=" << engine->name() << ", model=" << cfg.model << "\n";
+    std::cout << "grid_units=dimensionless, occ_resolution=1.0(nominal)\n";
+    if (cfg.ros_cell_size_overridden) {
+        std::cout << "warning: --ros-cell-size is ignored in current dimensionless-grid mode\n";
+    }
     const std::string header =
         "frame,pre_ms,infer_ms,post_ms,plan_ms,ros_ms,total_ms,moving_fps,copy_pre,copy_post,copy_plan,copy_ros,copy_total,alloc_count";
     std::cout << header << "\n";
@@ -335,3 +341,4 @@ int main(int argc, char** argv) {
     }
     return 0;
 }
+
