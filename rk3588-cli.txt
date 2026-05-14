@@ -7,8 +7,15 @@ cd "$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 # 1) 编译
 source /opt/ros/humble/setup.bash
 rm -rf build_ninja
-cmake -S . -B build_ninja -G Ninja -DCMAKE_BUILD_TYPE=Release -DYOSEG_WITH_ROS2=ON
+
+cmake -S . -B build_ninja -G Ninja \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DYOSEG_WITH_ROS2=ON \
+  -DUSE_RKNN=ON
+  
 cmake --build build_ninja -j$(nproc)
+
+
 
 # 2) 终端1：发布（固定 RKNN）
 source /opt/ros/humble/setup.bash

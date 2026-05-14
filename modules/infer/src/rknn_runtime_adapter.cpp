@@ -22,7 +22,7 @@ bool RknnRuntimeAdapter::init(const std::vector<std::uint8_t>& model_blob) {
         return false;
     }
     rknn_context ctx = 0;
-    const int ret = rknn_init(&ctx, model_blob.data(), model_blob.size(), 0, nullptr);
+    const int ret = rknn_init(&ctx, (void*)model_blob.data(), model_blob.size(), 0, nullptr);
     if (ret != RKNN_SUCC) {
         ready_ = false;
         return false;
